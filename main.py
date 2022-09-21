@@ -1,9 +1,11 @@
 import time
+from typing import List
+
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import delete
 import models
-from dtos.house_dto import House
+from dtos.house_dto import House, HouseResponse
 import psycopg2
 
 from db_config import engine, get_db
@@ -30,8 +32,8 @@ while True:
 models.Base.metadata.create_all(bind=engine)
 
 
-@app.get('/houses')
-async def get_list_of_houses(db: Session = Depends(get_db)):
+@app.get('/houses', response_model=List[HouseResponse])
+async def get_list_of_houses(db: Session = Depends(get_db), ):
     """Fetches all the houses from the database"""
     query = db.query(models.House).all()
 
@@ -40,7 +42,7 @@ async def get_list_of_houses(db: Session = Depends(get_db)):
     return query
 
 
-@app.post('/houses/create')
+@app.post('/houses/create',response_model=HouseResponse)
 async def add_new_house(data: House, db: Session = Depends(get_db)):
     # QUERYING USING SQLALCHEMY
 
@@ -51,7 +53,7 @@ async def add_new_house(data: House, db: Session = Depends(get_db)):
     return new_house
 
 
-@app.get('/houses/{id}')
+@app.get('/houses/{id}',response_model=HouseResponse)
 def find_house(id: int, db: Session = Depends(get_db)):
     """Find specific post by their ID"""
     found_house = db.query(models.House).filter(models.House.id == id).first()
@@ -71,7 +73,7 @@ async def delete_house(id: int, db: Session = Depends(get_db)):
     return {"success": f"Post with id = {id} has been deleted successfully."}
 
 
-@app.put('/houses/{id}')
+@app.put('/houses/{id}',response_model=HouseResponse)
 async def update_house(id: int, data: House, db: Session = Depends(get_db)):
     """Update the house instance with necessary information"""
     found_house = db.query(models.House).filter(models.House.id == id)
