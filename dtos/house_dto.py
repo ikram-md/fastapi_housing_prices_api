@@ -8,3 +8,13 @@ class House(BaseModel):
     waterfront: bool
     price: float
     desc: Optional[str]
+
+
+class HouseResponse(BaseModel):
+    id : int
+    address: str
+    desc: Optional[str]
+    price: int
+
+    class Config:
+        orm_mode = True
