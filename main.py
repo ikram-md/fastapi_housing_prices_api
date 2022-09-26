@@ -1,12 +1,12 @@
 import time
 from typing import List
-
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import delete
 import models
 from dtos.house_dto import House, HouseResponse
 import psycopg2
+from dtos.user_dto import User, UserSerilizer
 
 from db_config import engine, get_db
 
@@ -15,7 +15,7 @@ from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
-# TODO: Connect to Postgres database.
+# Connect to Postgres database.
 while True:
     try:
         conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres159753",
@@ -82,3 +82,16 @@ async def update_house(id: int, data: House, db: Session = Depends(get_db)):
     found_house.update(data.dict(), synchronize_session=False)
     db.commit()
     return {"success": "House has been updated ", "house": found_house.first()}
+
+# User creation 
+
+@app.post('/users/create', status_code=status.HTTP_201_CREATED, response_model=UserSerilizer)
+async def create_user(data : User,db : Session = Depends(get_db)):
+    found_user = db.query(models.User).findOne(models.User.email == data.email).first()
+    if found_user :
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email {data.email} already exists")
+    new_user = models.User(**data.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"success" : new_user}
