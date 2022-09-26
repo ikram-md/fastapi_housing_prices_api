@@ -7,7 +7,8 @@ import models, utils
 
 # creating a router instance
 router = APIRouter(
-    prefix="/users"
+    prefix="/users",
+    tags=['Users']
 )
 
 
@@ -26,7 +27,7 @@ async def create_user(data: User, db: Session = Depends(get_db)):
     return new_user
 
 
-# Get all the users
+
 @router.post('/', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
 async def get_users(db: Session = Depends(get_db)):
     found_users = db.query(models.User).findAll()

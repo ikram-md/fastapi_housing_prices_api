@@ -7,7 +7,8 @@ from dtos.house_dto import HouseResponse, House
 import models
 
 router = APIRouter(
-    prefix='/houses'
+    prefix='/houses',
+    tags=['Houses']
 )
 
 
@@ -15,9 +16,6 @@ router = APIRouter(
 async def get_list_of_houses(db: Session = Depends(get_db), ):
     """Fetches all the houses from the database"""
     query = db.query(models.House).all()
-
-    # cursor.execute("""SELECT * FROM houses ORDER BY id DESC""")
-    # query = cursor.fetchall()
     return query
 
 
