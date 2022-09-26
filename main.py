@@ -5,7 +5,7 @@ import psycopg2
 from db_config import engine, get_db
 # this will help us retrieve the column name for the tables
 from psycopg2.extras import RealDictCursor
-from routers import houses, users
+from routers import houses, users, auth
 
 app = FastAPI()
 
@@ -28,3 +28,4 @@ models.Base.metadata.create_all(bind=engine)
 # include our routers
 app.include_router(houses.router)
 app.include_router(users.router)
+app.include_router(auth.router)
