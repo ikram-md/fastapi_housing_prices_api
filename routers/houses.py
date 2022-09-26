@@ -6,10 +6,12 @@ from db_config import get_db
 from dtos.house_dto import HouseResponse, House
 import models
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/houses'
+)
 
 
-@router.get('/houses', response_model=List[HouseResponse])
+@router.get('/', response_model=List[HouseResponse])
 async def get_list_of_houses(db: Session = Depends(get_db), ):
     """Fetches all the houses from the database"""
     query = db.query(models.House).all()
@@ -19,7 +21,7 @@ async def get_list_of_houses(db: Session = Depends(get_db), ):
     return query
 
 
-@router.post('/houses/create', response_model=HouseResponse)
+@router.post('/create', response_model=HouseResponse)
 async def add_new_house(data: House, db: Session = Depends(get_db)):
     # QUERYING USING SQLALCHEMY
 
@@ -30,7 +32,7 @@ async def add_new_house(data: House, db: Session = Depends(get_db)):
     return new_house
 
 
-@router.get('/houses/{id}', response_model=HouseResponse)
+@router.get('/{id}', response_model=HouseResponse)
 def find_house(id: int, db: Session = Depends(get_db)):
     """Find specific post by their ID"""
     found_house = db.query(models.House).filter(models.House.id == id).first()
@@ -39,7 +41,7 @@ def find_house(id: int, db: Session = Depends(get_db)):
     return found_house
 
 
-@router.delete('/houses/{id}/delete')
+@router.delete('/{id}/delete')
 async def delete_house(id: int, db: Session = Depends(get_db)):
     """Delete specified post by their id"""
     found_house = db.query(models.House).filter(models.House.id == id).first()
@@ -50,7 +52,7 @@ async def delete_house(id: int, db: Session = Depends(get_db)):
     return {"success": f"Post with id = {id} has been deleted successfully."}
 
 
-@router.put('/houses/{id}', response_model=HouseResponse)
+@router.put('/{id}', response_model=HouseResponse)
 async def update_house(id: int, data: House, db: Session = Depends(get_db)):
     """Update the house instance with necessary information"""
     found_house = db.query(models.House).filter(models.House.id == id)

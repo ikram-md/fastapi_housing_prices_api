@@ -6,10 +6,12 @@ from dtos.user_dto import User, UserSerilizer
 import models, utils
 
 # creating a router instance
-router = APIRouter()
+router = APIRouter(
+    prefix="/users"
+)
 
 
-@router.post('/users/create', status_code=status.HTTP_201_CREATED, response_model=UserSerilizer)
+@router.post('/create', status_code=status.HTTP_201_CREATED, response_model=UserSerilizer)
 async def create_user(data: User, db: Session = Depends(get_db)):
     data.password = utils.hash_password(data.password)
 
@@ -25,7 +27,7 @@ async def create_user(data: User, db: Session = Depends(get_db)):
 
 
 # Get all the users
-@router.post('/users', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
+@router.post('/', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
 async def get_users(db: Session = Depends(get_db)):
     found_users = db.query(models.User).findAll()
     if not found_users:
@@ -33,7 +35,7 @@ async def get_users(db: Session = Depends(get_db)):
     return found_users
 
 
-@router.get('/users/{id}', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
+@router.get('/{id}', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
 async def get_user(id: int, db: Session = Depends(get_db)):
     found_user = db.query(models.User).filter(models.User.id == id).first()
     if not found_user:
@@ -41,7 +43,7 @@ async def get_user(id: int, db: Session = Depends(get_db)):
     return found_user
 
 
-@router.delete('/users/{id}/delete', status_code=status.HTTP_200_OK)
+@router.delete('/{id}/delete', status_code=status.HTTP_200_OK)
 async def delete_user(id: int, db: Session = Depends(get_db)):
     found_user = db.query(models.User).filter(models.User.id == id).first()
     if not found_user:
@@ -51,7 +53,7 @@ async def delete_user(id: int, db: Session = Depends(get_db)):
     return {"success": "User deleted successfully."}
 
 
-@router.patch('/users/{id}/update', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
+@router.patch('/{id}/update', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
 async def update_user(id: int, data: User, db: Session = Depends(get_db)):
     found_user = db.query(models.User).findOne(models.User.id == id).first()
     if not found_user:
