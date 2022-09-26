@@ -1,17 +1,11 @@
 import time
-from typing import List
 from fastapi import FastAPI, HTTPException, status, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import delete
 import models
-from dtos.house_dto import House, HouseResponse
 import psycopg2
-from dtos.user_dto import User, UserSerilizer
-
 from db_config import engine, get_db
-
 # this will help us retrieve the column name for the tables
 from psycopg2.extras import RealDictCursor
+from routers import houses, users
 
 app = FastAPI()
 
@@ -31,67 +25,6 @@ while True:
 # ensures that our models are in sync.
 models.Base.metadata.create_all(bind=engine)
 
-
-@app.get('/houses', response_model=List[HouseResponse])
-async def get_list_of_houses(db: Session = Depends(get_db), ):
-    """Fetches all the houses from the database"""
-    query = db.query(models.House).all()
-
-    # cursor.execute("""SELECT * FROM houses ORDER BY id DESC""")
-    # query = cursor.fetchall()
-    return query
-
-
-@app.post('/houses/create',response_model=HouseResponse)
-async def add_new_house(data: House, db: Session = Depends(get_db)):
-    # QUERYING USING SQLALCHEMY
-
-    new_house = models.House(**data.dict())
-    db.add(new_house)
-    db.commit()
-    db.refresh(new_house)
-    return new_house
-
-
-@app.get('/houses/{id}',response_model=HouseResponse)
-def find_house(id: int, db: Session = Depends(get_db)):
-    """Find specific post by their ID"""
-    found_house = db.query(models.House).filter(models.House.id == id).first()
-    if not found_house:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unable to find house with id = {id}")
-    return found_house
-
-
-@app.delete('/houses/{id}/delete')
-async def delete_house(id: int, db: Session = Depends(get_db)):
-    """Delete specified post by their id"""
-    found_house = db.query(models.House).filter(models.House.id == id).first()
-    if not found_house:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unable to find house with id = {id}")
-    db.delete(found_house)
-    db.commit()
-    return {"success": f"Post with id = {id} has been deleted successfully."}
-
-
-@app.put('/houses/{id}',response_model=HouseResponse)
-async def update_house(id: int, data: House, db: Session = Depends(get_db)):
-    """Update the house instance with necessary information"""
-    found_house = db.query(models.House).filter(models.House.id == id)
-    if not found_house.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unable to find house with id = {id}")
-    found_house.update(data.dict(), synchronize_session=False)
-    db.commit()
-    return {"success": "House has been updated ", "house": found_house.first()}
-
-# User creation 
-
-@app.post('/users/create', status_code=status.HTTP_201_CREATED, response_model=UserSerilizer)
-async def create_user(data : User,db : Session = Depends(get_db)):
-    found_user = db.query(models.User).findOne(models.User.email == data.email).first()
-    if found_user :
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email {data.email} already exists")
-    new_user = models.User(**data.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"success" : new_user}
+# include our routers
+app.include_router(houses.router)
+app.include_router(users.router)
