@@ -2,6 +2,8 @@ from typing import List
 
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
+
+import oauth2
 from db_config import get_db
 from dtos.house_dto import HouseResponse, House
 import models
@@ -13,7 +15,7 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[HouseResponse])
-async def get_list_of_houses(db: Session = Depends(get_db), ):
+async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware : int = Depends(oauth2.get_current_user)):
     """Fetches all the houses from the database"""
     query = db.query(models.House).all()
     return query
