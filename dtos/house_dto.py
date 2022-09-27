@@ -10,11 +10,12 @@ class House(BaseModel):
     desc: Optional[str]
 
 
-class HouseResponse(BaseModel):
-    id : int
+class HouseResponse(House):
+    id: int
     address: str
     desc: Optional[str]
     price: int
+    owner_id: int
 
     class Config:
         orm_mode = True
