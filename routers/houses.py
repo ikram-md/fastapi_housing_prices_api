@@ -15,14 +15,15 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[HouseResponse])
-async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware : int = Depends(oauth2.get_current_user)):
+async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user)):
     """Fetches all the houses from the database"""
     query = db.query(models.House).all()
     return query
 
 
 @router.post('/create', response_model=HouseResponse)
-async def add_new_house(data: House, db: Session = Depends(get_db)):
+async def add_new_house(data: House, db: Session = Depends(get_db),
+                        current_user: models.User = Depends(oauth2.get_current_user)):
     # QUERYING USING SQLALCHEMY
 
     new_house = models.House(**data.dict())
@@ -33,7 +34,7 @@ async def add_new_house(data: House, db: Session = Depends(get_db)):
 
 
 @router.get('/{id}', response_model=HouseResponse)
-def find_house(id: int, db: Session = Depends(get_db)):
+def find_house(id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     """Find specific post by their ID"""
     found_house = db.query(models.House).filter(models.House.id == id).first()
     if not found_house:
@@ -42,7 +43,8 @@ def find_house(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}/delete')
-async def delete_house(id: int, db: Session = Depends(get_db)):
+async def delete_house(id: int, db: Session = Depends(get_db),
+                       current_user: models.User = Depends(oauth2.get_current_user)):
     """Delete specified post by their id"""
     found_house = db.query(models.House).filter(models.House.id == id).first()
     if not found_house:
@@ -53,7 +55,8 @@ async def delete_house(id: int, db: Session = Depends(get_db)):
 
 
 @router.put('/{id}', response_model=HouseResponse)
-async def update_house(id: int, data: House, db: Session = Depends(get_db)):
+async def update_house(id: int, data: House, db: Session = Depends(get_db),
+                       current_user: models.User = Depends(oauth2.get_current_user)):
     """Update the house instance with necessary information"""
     found_house = db.query(models.House).filter(models.House.id == id)
     if not found_house.first():

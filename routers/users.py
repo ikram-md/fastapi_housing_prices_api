@@ -1,6 +1,8 @@
 from typing import List
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
+
+import oauth2
 from db_config import get_db
 from dtos.user_dto import User, UserSerilizer
 import models, utils
@@ -13,9 +15,9 @@ router = APIRouter(
 
 
 @router.post('/create', status_code=status.HTTP_201_CREATED, response_model=UserSerilizer)
-async def create_user(data: User, db: Session = Depends(get_db)):
+async def create_user(data: User, db: Session = Depends(get_db),
+                      current_user: models.User = Depends(oauth2.get_current_user)):
     data.password = utils.hash_password(data.password)
-
     # storing the user instance
     found_user = db.query(models.User).filter(models.User.email == data.email).first()
     if found_user:
@@ -25,7 +27,6 @@ async def create_user(data: User, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
-
 
 
 @router.post('/', status_code=status.HTTP_200_OK, response_model=UserSerilizer)
