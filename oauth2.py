@@ -2,10 +2,13 @@ from fastapi import Depends, status, HTTPException
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 
+import models
+from db_config import get_db
 from dtos.token import Token, TokenData
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 
 # SECRET KEY
 # Enryption Algorithm
@@ -26,9 +29,9 @@ def generate_token(payload: dict, ):
     return token
 
 
-def verify_token(token: Token, cred_exception):
+def verify_token(token: str, cred_exception):
     try:
-        payload = jwt.decode(token.access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id: str = payload.get("user_id")
         if not id:
             raise cred_exception
@@ -38,8 +41,10 @@ def verify_token(token: Token, cred_exception):
         raise cred_exception
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme), db : Session = Depends(get_db)):
     credentials_excep = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized",
                                       headers={"WWW-Authenticate": "Bearer"})
-
-    return verify_token(token, credentials_excep)
+    token_data : TokenData = verify_token(token, credentials_excep)
+    found_user : models.User  = db.query(models.User).filter(models.User.id == token_data.id).first()
+    print(found_user.email)
+    return found_user
