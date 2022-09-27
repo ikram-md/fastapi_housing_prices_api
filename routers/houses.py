@@ -26,7 +26,7 @@ async def add_new_house(data: House, db: Session = Depends(get_db),
                         current_user: models.User = Depends(oauth2.get_current_user)):
     # QUERYING USING SQLALCHEMY
 
-    new_house = models.House(**data.dict())
+    new_house = models.House(owner_id=current_user.id, **data.dict())
     db.add(new_house)
     db.commit()
     db.refresh(new_house)
