@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from db_config import get_db
 import models, utils
 from dtos.login_dto import LoginDTO
+from dtos.token import Token
 from oauth2 import generate_token
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
@@ -13,7 +14,8 @@ router = APIRouter(
 
 
 @router.post('/login')
-async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db),
+                response_model=Token):
     print(user_credentials)
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
     if not user:
