@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
@@ -15,9 +15,11 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[HouseResponse])
-async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user)):
+async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user),
+                             limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     """Fetches all the houses from the database"""
-    query = db.query(models.House).all()
+    print(limit)
+    query = db.query(models.House).filter(models.House.address.contains(search)).limit(limit).offset(skip).all()
     return query
 
 

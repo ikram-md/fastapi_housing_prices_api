@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 
@@ -29,9 +29,9 @@ async def create_user(data: User, db: Session = Depends(get_db),
     return new_user
 
 
-@router.post('/', status_code=status.HTTP_200_OK, response_model=List[UserSerilizer])
-async def get_users(db: Session = Depends(get_db)):
-    found_users = db.query(models.User).all()
+@router.get('/', status_code=status.HTTP_200_OK, response_model=List[UserSerilizer])
+async def get_users(db: Session = Depends(get_db), limit : int = 2, skip : int =0, search : Optional[str] = ""):
+    found_users = db.query(models.User).filter(models.User.username.contains(search)).limit(limit).offset(skip).all()
     if not found_users:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No user has been found')
     return found_users
