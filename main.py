@@ -10,6 +10,7 @@ from routers import houses, users, auth
 app = FastAPI()
 
 # Connect to Postgres database.
+
 while True:
     try:
         conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres159753",
@@ -29,3 +30,4 @@ models.Base.metadata.create_all(bind=engine)
 app.include_router(houses.router)
 app.include_router(users.router)
 app.include_router(auth.router)
+
