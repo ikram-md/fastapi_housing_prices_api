@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.post('/login')
 async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db),
-                response_model=Token):
+                ):
     print(user_credentials)
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
     if not user:
@@ -25,4 +25,4 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
     # generate a token
     access_token = generate_token(payload={"user_id": user.id})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token" : access_token, "access_type" : "Bearer"}
