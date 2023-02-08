@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, status, HTTPException, APIRouter
 from sqlalchemy.orm import Session
@@ -15,9 +15,10 @@ router = APIRouter(
 
 
 @router.get('/', response_model=List[HouseResponse])
-async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user)):
+async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user),
+                             limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     """Fetches all the houses from the database"""
-    query = db.query(models.House).all()
+    query = db.query(models.House).filter(models.House.address.contains(search)).limit(limit).offset(skip).all()
     return query
 
 
@@ -46,10 +47,18 @@ def find_house(id: int, db: Session = Depends(get_db), current_user: models.User
 async def delete_house(id: int, db: Session = Depends(get_db),
                        current_user: models.User = Depends(oauth2.get_current_user)):
     """Delete specified post by their id"""
-    found_house = db.query(models.House).filter(models.House.id == id).first()
+
+    found_house: models.House = db.query(models.House).filter(models.House.id == id).first()
+
     if not found_house:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unable to find house with id = {id}")
+
+    if not current_user.id == found_house.owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to preform requested change.")
+
     db.delete(found_house)
+
     db.commit()
     return {"success": f"Post with id = {id} has been deleted successfully."}
 
@@ -59,8 +68,15 @@ async def update_house(id: int, data: House, db: Session = Depends(get_db),
                        current_user: models.User = Depends(oauth2.get_current_user)):
     """Update the house instance with necessary information"""
     found_house = db.query(models.House).filter(models.House.id == id)
+
     if not found_house.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unable to find house with id = {id}")
+
+    if not current_user.id == found_house.owner_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Not authorized to preform requested change.")
+
     found_house.update(data.dict(), synchronize_session=False)
+
     db.commit()
     return {"success": "House has been updated ", "house": found_house.first()}
