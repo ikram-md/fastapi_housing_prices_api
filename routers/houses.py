@@ -18,7 +18,6 @@ router = APIRouter(
 async def get_list_of_houses(db: Session = Depends(get_db), auth_middleware: int = Depends(oauth2.get_current_user),
                              limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     """Fetches all the houses from the database"""
-    print(limit)
     query = db.query(models.House).filter(models.House.address.contains(search)).limit(limit).offset(skip).all()
     return query
 
